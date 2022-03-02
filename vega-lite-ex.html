@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Covid Deaths Vega-lite Example</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
+
+    <style media="screen">
+      /* Add space between Vega-Embed links  */
+      .vega-actions a {
+        margin-right: 5px;
+      }
+      h1 {
+        font-weight: bold;
+        text-align: center;
+      }
+      h2 {
+        font-weight: bold;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Covid-19 Deaths</h1>
+    <h2>for the period from 1/1/2020 to 10/6/2021</h2>
+    <hr
+    <!-- Container for the visualization -->
+    <div id="vis"></div>
+
+    <div id="mygrid">
+      <h2>Full Dataset Grid</h2>
+      <table id="myTable">
+        <thead>
+          <tr>
+            <th>Age Group</th>
+            <th>Deaths</th>
+            <th>Sex</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+
+
+      async function fetchData(url) {
+        var jsonData = [];
+        var response = await fetch(url);
+        var data = await response.json();
+        data.forEach(element => {
+          jsonData.push(element);
+        });
+        console.log(jsonData);
+        return jsonData;
+      }
+
+      jsonataSpec = `
+      $filter(
+        $filter($[state="United States"]^(age_group)
+        .{
+            "age_group": age_group,
+            "sex": sex,
+            "covid_19_deaths":$.covid_19_deaths
+        },
+        function($v, $i, $a) {
+          $v.sex != "All Sexes"
+        }),
+            function($v,$i,$a) {
+                $v.age_group in ["0-17 years","18-29 years","30-39 years","40-49 years","50-64 years","65-74 years","75-84 years","85 years and over"]
+            }
+        )[{
+            "age_group": age_group,
+            "sex": sex,
+            "covid_19_deaths":$.covid_19_deaths
+        }]`;
+      var data = fetchData("https://data.cdc.gov/resource/9bhg-hcku.json");
+
+      data.then(x => {
+        var sex = ["Male","Female"];
+        var xCategories = ["0-17 years","18-29 years","30-39 years","40-49 years","50-64 years","65-74 years","75-84 years","85 years and over"];
+        var result = jsonata(jsonataSpec).evaluate(x);
+        console.log(x);
+        console.log(result);
+
+        // Assign the specification to a local variable vlSpec.
+        var vlSpec = {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          // "data": {"url":"https://data.cdc.gov/resource/9bhg-hcku.json"},
+          "data": {
+            "values": result
+          },
+          //"transform": [
+            //{ "filter": "datum.state != 'United States'" },
+            //{ "filter": "datum.sex != 'All Sexes'" },
+            //{ "filter": {"field": "age_group", "oneOf": xCategories }}
+          //],
+          "vconcat": [
+            {
+              "title": {
+                "text":"Deaths by Age Group and Sex",
+                "align": "center",
+                "anchor":"middle-top",
+                "fontSize": 14
+              },
+              "width": {"step": 40},
+              "mark": "bar",
+              "encoding": {
+                "column": {
+                  "field": "age_group",
+                  "type": "ordinal",
+                  "sort": xCategories,
+                  "spacing": 16,
+                  "header": {"orient": "bottom"},
+                  "title": "Age Group"
+                },
+                "x": {
+                  "field": "sex",
+                  "axis": null
+                },
+                "color": {
+                  "field": "sex",
+                  "scale": {"range": [ "#ff00a0", "#0050ff"]}
+                },
+                "y": {
+                  "field": "covid_19_deaths",
+                  "title": "Covid Deaths",
+                  "type": "quantitative",
+                  "axis": {"grid": false}
+                },
+                "tooltip": [
+                  {
+                    "field": "sex",
+                    "type": "ordinal",
+                    "title": "Sex"
+                  },
+                  {
+                    "field": "covid_19_deaths",
+                    "type": "quantitative",
+                    "title": "Deaths"
+                  }
+                ]
+              },
+              "config": {
+                "view": {"stroke": "transparent"},
+                "axis": {"domainWidth": 3}
+              },
+            },
+            {
+              "title": {
+                "text":"Total Percentage by Gender",
+                "align": "center",
+                "anchor":"middle-top",
+                "fontSize": 14
+              },
+              "mark":"arc",
+              "encoding": {
+                "theta": {
+                  "field": "covid_19_deaths",
+                  "type": "quantitative",
+                  "aggregate": "sum",
+                  "stack": true
+                },
+                "color": {
+                  "field": "sex",
+                  "type": "nominal"
+                },
+                "tooltip": [
+                  {
+                    "field": "sex",
+                    "type": "ordinal",
+                    "title": "Sex"
+                  },
+                  {
+                    "field": "covid_19_deaths",
+                    "type": "quantitative",
+                    "aggregate": "sum",
+                    "title": "Deaths"
+                  }
+                ]
+              },
+              "layer": [
+                {
+                  "mark": {"type": "arc", "outerRadius": 160, "stroke": "#000000"}
+                },
+                {
+                  "mark": {"type": "text", "radius": 200},
+                  "encoding": {
+                    "text": {"field": "sex", "type": "nominal"}
+                  }
+                }
+              ]
+            }
+          ]
+      };
+
+      // Embed the visualization in the container with id `vis`
+      vegaEmbed("#vis", vlSpec).then(function(result) {
+      // Access the Vega view instance (https://vega.github.io/vega/docs/api/view/) as result.view
+      console.log('result', result);
+      }).catch(console.error);
+
+      // Create the data table.
+      var mytable = $("#myTable").DataTable( {
+          "data": result,
+          "columns": [
+            { "data": "age_group" },
+            { "data": "covid_19_deaths", "defaultContent": 0 },
+            { "data": "sex" }
+          ]
+      });
+    });
+
+    </script>
+  </body>
+</html>

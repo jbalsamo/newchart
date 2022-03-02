@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ECharts</title>
+    <!-- Include the ECharts file you just downloaded -->
+    <script src="echarts.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <!-- Prepare a DOM with a defined width and height for ECharts -->
+    <div id="main" style="width: 600px;height:400px;"></div>
+    <script type="text/javascript">
+      // Initialize the echarts instance based on the prepared dom
+      var myChart = echarts.init(document.getElementById('main'));
+// Show title, legends and empty axes
+myChart.setOption({
+  title: {
+    text: 'Pfizer Vaccine\nAllocations'
+  },
+  toolbox: {
+        show: true,
+        feature: {
+            dataZoom: {
+                yAxisIndex: 'none'
+            },
+            dataView: {readOnly: false},
+            magicType: {type: ["bar",'line']},
+            restore: {},
+            saveAsImage: {}
+        }
+    },tooltip: {},
+  legend: {
+    data: ['1st Dose','2nd Dose']
+  },
+  xAxis: {
+    data: [],
+    nameRotate: 90,
+  },
+  yAxis: {},
+  series: [
+    {
+      name: 'States',
+      type: 'bar',
+      data: []
+    },
+    {
+      name: 'States',
+      type: 'bar',
+      data: []
+    }
+  ]
+});
+
+// Asynchronous Data Loading
+$.get('https://data.cdc.gov/resource/saz5-9hgg.json').done(function(data) {
+  let selected_states = ['Alaska','New York','Florida','Texas','California','Missouri','Pennsylvania'];
+  let chart_data = {};
+  chart_data.values = [];
+  chart_data.values2 = [];
+  let date = "2021-06-21T00:00:00.000";
+  chart_data.categories = [...selected_states];
+  chart_data.categories.forEach((desired_element,index) => {
+    console.log(desired_element);
+    data.forEach(list_element => {
+      if((list_element.jurisdiction == desired_element) && (list_element.week_of_allocations == date)){
+        chart_data.values.push(list_element._1st_dose_allocations);
+      };
+      if((list_element.jurisdiction == desired_element) && (list_element.week_of_allocations == date)){
+        chart_data.values2.push(list_element._2nd_dose_allocations);
+      };
+    });
+  });
+  console.log(chart_data);
+  // Fill in the data
+  myChart.setOption({
+    xAxis: {
+      data: chart_data.categories,
+      nameRotate: 60
+    },
+    series: [
+      {
+        // Find series by name
+        name: '1st Dose',
+        data: chart_data.values
+      },
+      {
+        // Find series by name
+        name: '2nd Dose',
+        data: chart_data.values2
+      }
+    ]
+  });
+});
+      // Display the chart using the configuration items and data just specified.
+    </script>
+  </body>
+</html>

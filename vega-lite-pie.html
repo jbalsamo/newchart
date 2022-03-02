@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vega-Lite Bar Chart</title>
+    <meta charset="utf-8" />
+
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+
+    <style media="screen">
+      /* Add space between Vega-Embed links  */
+      .vega-actions a {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Covid-19 Deaths by Age Groups and Sex</h1>
+    <h2>for the period from 1/1/2020 to 10/6/2021</h2>
+    <!-- Container for the visualization -->
+    <div id="vis"></div>
+    <div id="vis2"></div>
+
+    <script>
+      var xCategories = ['0-17 years','18-29 years','0-17 years','18-29 years','30-39 years','40-49 years','50-64 years','65-74 years','75-84 years','85 years and over'];
+      // Assign the specification to a local variable vlSpec.
+      var vlSpec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "A simple pie chart with labels.",
+  "data": {
+    "values": [
+      {"category": "a", "value": 4},
+      {"category": "b", "value": 6},
+      {"category": "c", "value": 10},
+      {"category": "d", "value": 3},
+      {"category": "e", "value": 7},
+      {"category": "f", "value": 8}
+    ]
+  },
+  'transform': [
+    {
+      'filter': {'field': 'category', 'oneOf': ['a','c','d','f']}
+    }
+  ],
+  "encoding": {
+    "theta": {"field": "value", "type": "quantitative", "stack": true},
+    "color": {"field": "category", "type": "nominal"}
+  },
+  "layer": [{
+    "mark": {"type": "arc", "outerRadius": 80}
+  }, {
+    "mark": {"type": "text", "radius": 90},
+    "encoding": {
+      "text": {"field": "category", "type": "nominal"}
+    }
+  }]
+}
+    //   {
+    //     $schema: 'https://vega.github.io/schema/vega-lite/v5.1.1.json',
+    //     data: {'url':'https://data.cdc.gov/resource/9bhg-hcku.json'},
+    //     transform: [
+    //       { filter: "datum.state != 'United States'" },
+    //       { filter: "datum.sex != 'All Sexes'" },
+    //       { filter: "datum.age_group != 'All Ages'" },
+    //       { filter: {'field': 'age_group', 'oneOf': xCategories }}
+    //     ],
+    //     'mark':'arc',
+    //     encoding: {
+    //       'theta': {
+    //         'field': 'covid_19_deaths',
+    //         'type': 'quantitative',
+    //         'aggregate': 'sum',
+    //         'stack': true
+    //       },
+    //       'color': {
+    //         'field': 'sex',
+    //         'type': 'nominal'
+    //       },
+    //       "layer": [
+    //         {
+    //           "mark": {"type": "arc", "outerRadius": 80, 'stroke': '#000000'}
+    //         },
+    //         {
+    //           "mark": {"type": "text", "radius": 90},
+    //           "encoding": {
+    //             "text": {"field": "sex", "type": "nominal"}
+    //           }
+    //         }
+    //       ]
+    //     }
+    // };
+
+      // Embed the visualization in the container with id `vis`
+      vegaEmbed('#vis', vlSpec);
+    </script>
+  </body>
+</html>
